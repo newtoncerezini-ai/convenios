@@ -32,7 +32,7 @@ Este projeto pode ser publicado na Vercel como aplicação estática com funçã
 Arquivos importantes:
 
 - `index.html`, `styles.css` e `app.js`: frontend estático.
-- `api/proxy.py`: proxy serverless para evitar bloqueio de CORS da API pública.
+- `api/proxy.js`: proxy serverless para evitar bloqueio de CORS da API pública.
 - `server.py`: apenas para rodar localmente.
 
-Na Vercel, o frontend chama `/api/proxy?path=/parcerias/...`, e a função encaminha a requisição para o Transferegov.
+Na Vercel, o frontend chama `/api/proxy?path=/parcerias/...`, e a função Node.js encaminha a requisição para o Transferegov.
