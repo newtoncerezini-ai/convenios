@@ -25,6 +25,8 @@ http://localhost:8000
 
 O painel carrega os dados ao vivo, aplica filtros no navegador e permite exportar a base filtrada em CSV.
 
+Se a API bloquear a função serverless da Vercel, o painel usa `data/bootstrap.json` como fallback. Esse arquivo é atualizado pela GitHub Action diária.
+
 ## Deploy na Vercel
 
 Este projeto pode ser publicado na Vercel como aplicação estática com função serverless Python.

@@ -34,13 +34,18 @@ async function loadDashboard(force = false) {
     if (!state.proposals.length || force) {
       state.amendmentsLoaded = false;
       state.programs.clear();
-      const update = await apiGet("/data-atualizacao");
-      $("updatedAt").textContent = `Atualizado em ${formatDate(update.data_ultima_atualizacao)}`;
-      state.proposals = await fetchAll("/proposta", { sg_uf_recebedor: "PE" });
-      state.enriched = state.proposals.map((proposal) => ({ ...proposal, program: null }));
-      enrichPrograms().then(() => {
-        applyFilters();
-      }).catch((error) => console.warn("Programas não carregados", error));
+      try {
+        const update = await apiGet("/data-atualizacao");
+        $("updatedAt").textContent = `API ao vivo: ${formatDate(update.data_ultima_atualizacao)}`;
+        state.proposals = await fetchAll("/proposta", { sg_uf_recebedor: "PE" });
+        state.enriched = state.proposals.map((proposal) => ({ ...proposal, program: null }));
+        enrichPrograms().then(() => {
+          applyFilters();
+        }).catch((error) => console.warn("Programas não carregados", error));
+      } catch (apiError) {
+        console.warn("API ao vivo indisponível, usando snapshot", apiError);
+        await loadSnapshot();
+      }
     }
     fillFilters();
     applyFilters();
@@ -52,6 +57,18 @@ async function loadDashboard(force = false) {
     $("loadingState").hidden = true;
     $("errorState").hidden = false;
   }
+}
+
+async function loadSnapshot() {
+  $("loadingText").textContent = "Carregando snapshot publicado...";
+  const response = await fetch(new URL("/data/bootstrap.json", window.location.origin));
+  if (!response.ok) throw new Error(`${response.status} ao carregar snapshot local`);
+  const snapshot = fixEncoding(await response.json());
+  state.proposals = snapshot.proposals || [];
+  state.programs.clear();
+  (snapshot.programs || []).forEach((program) => state.programs.set(program.id_programa, program));
+  state.enriched = state.proposals.map((proposal) => ({ ...proposal, program: state.programs.get(proposal.id_programa) || null }));
+  $("updatedAt").textContent = `Snapshot: ${formatDate(snapshot.data_ultima_atualizacao)}`;
 }
 
 async function fetchAll(path, params = {}) {
