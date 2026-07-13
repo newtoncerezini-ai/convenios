@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Painel de Convênios em Pernambuco</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" href="styles.css?v=3" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">PE</div>
+          <div>
+            <strong>Convênios PE</strong>
+            <span>Transferegov.br</span>
+          </div>
+        </div>
+
+        <nav class="tabs" aria-label="Abas do painel">
+          <button class="tab is-active" data-tab="overview"><i data-lucide="layout-dashboard"></i><span>Visão Geral</span></button>
+          <button class="tab" data-tab="territory"><i data-lucide="map"></i><span>Território</span></button>
+          <button class="tab" data-tab="finance"><i data-lucide="landmark"></i><span>Financeiro</span></button>
+          <button class="tab" data-tab="amendments"><i data-lucide="scroll-text"></i><span>Emendas</span></button>
+          <button class="tab" data-tab="programs"><i data-lucide="building-2"></i><span>Programas</span></button>
+          <button class="tab" data-tab="risks"><i data-lucide="triangle-alert"></i><span>Riscos</span></button>
+          <button class="tab" data-tab="details"><i data-lucide="search"></i><span>Detalhamento</span></button>
+        </nav>
+
+        <div class="source-box">
+          <span>Fonte</span>
+          <strong>API Pública Transferegov</strong>
+          <small id="updatedAt">Carregando atualização...</small>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Pernambuco</p>
+            <h1>Transferências e convênios</h1>
+          </div>
+          <div class="actions">
+            <button id="refreshBtn" class="icon-button" title="Atualizar dados" aria-label="Atualizar dados"><i data-lucide="refresh-cw"></i></button>
+            <button id="exportBtn" class="button"><i data-lucide="download"></i><span>CSV</span></button>
+          </div>
+        </header>
+
+        <section class="filters" aria-label="Filtros">
+          <label>
+            <span>Ano</span>
+            <select id="yearFilter"></select>
+          </label>
+          <label>
+            <span>Situação</span>
+            <select id="statusFilter"></select>
+          </label>
+          <label>
+            <span>Município</span>
+            <select id="cityFilter"></select>
+          </label>
+          <label>
+            <span>Busca</span>
+            <input id="searchFilter" type="search" placeholder="Objeto, recebedor, CNPJ..." />
+          </label>
+        </section>
+
+        <section id="loadingState" class="loading">
+          <div class="spinner"></div>
+          <strong>Carregando propostas de Pernambuco</strong>
+          <span id="loadingText">Conectando à API pública...</span>
+        </section>
+
+        <section id="errorState" class="error-state" hidden>
+          <i data-lucide="wifi-off"></i>
+          <strong>Não consegui consultar a API agora.</strong>
+          <span>Você pode tentar atualizar novamente. Se o bloqueio for CORS, rode um servidor local simples.</span>
+        </section>
+
+        <div id="dashboard" hidden>
+          <section class="panel is-active" data-panel="overview">
+            <div class="kpi-grid">
+              <article class="kpi"><span>Propostas</span><strong id="kpiProposals">-</strong><small id="kpiFiltered">-</small></article>
+              <article class="kpi"><span>Valor planejado</span><strong id="kpiPlanned">-</strong><small>Propostas filtradas</small></article>
+              <article class="kpi"><span>Aprovadas</span><strong id="kpiApproved">-</strong><small id="kpiApprovedShare">-</small></article>
+              <article class="kpi"><span>Municípios</span><strong id="kpiCities">-</strong><small>Com registros no filtro</small></article>
+            </div>
+            <div class="grid two">
+              <article class="surface"><div class="surface-head"><h2>Evolução anual</h2></div><canvas id="yearChart"></canvas></article>
+              <article class="surface"><div class="surface-head"><h2>Situação das propostas</h2></div><canvas id="statusChart"></canvas></article>
+            </div>
+            <article class="surface">
+              <div class="surface-head"><h2>Últimas propostas</h2></div>
+              <div class="table-wrap"><table><thead><tr><th>Data</th><th>Município</th><th>Recebedor</th><th>Situação</th><th>Valor</th></tr></thead><tbody id="latestRows"></tbody></table></div>
+            </article>
+          </section>
+
+          <section class="panel" data-panel="territory">
+            <div class="grid two">
+              <article class="surface tall"><div class="surface-head"><h2>Ranking por município</h2></div><canvas id="cityChart"></canvas></article>
+              <article class="surface tall">
+                <div class="surface-head"><h2>Mapa territorial</h2><span id="territoryHint"></span></div>
+                <div id="territoryMap" class="territory-map"></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel" data-panel="finance">
+            <div class="grid two">
+              <article class="surface"><div class="surface-head"><h2>Custeio x investimento</h2></div><canvas id="categoryChart"></canvas></article>
+              <article class="surface"><div class="surface-head"><h2>Fluxo mensal planejado</h2></div><canvas id="monthChart"></canvas></article>
+            </div>
+            <article class="surface">
+              <div class="surface-head"><h2>Maiores valores planejados</h2></div>
+              <div class="table-wrap"><table><thead><tr><th>Município</th><th>Recebedor</th><th>Objeto</th><th>Situação</th><th>Valor</th></tr></thead><tbody id="valueRows"></tbody></table></div>
+            </article>
+          </section>
+
+          <section class="panel" data-panel="amendments">
+            <article class="surface">
+              <div class="surface-head"><h2>Emendas parlamentares</h2><button id="loadAmendmentsBtn" class="button"><i data-lucide="play"></i><span>Carregar</span></button></div>
+              <p class="muted">A API traz distribuição de recurso por proposta, parlamentar, tipo de emenda e valor. Esta aba carrega os dados sob demanda para evitar excesso de requisições.</p>
+              <div id="amendmentSummary" class="mini-grid"></div>
+              <div class="table-wrap"><table><thead><tr><th>Parlamentar</th><th>Tipo</th><th>Emenda</th><th>Propostas</th><th>Valor</th></tr></thead><tbody id="amendmentRows"></tbody></table></div>
+            </article>
+          </section>
+
+          <section class="panel" data-panel="programs">
+            <div class="grid two">
+              <article class="surface tall"><div class="surface-head"><h2>Programas mais recorrentes</h2></div><canvas id="programChart"></canvas></article>
+              <article class="surface tall"><div class="surface-head"><h2>Órgãos repassadores</h2></div><div id="agencyList" class="rank-list"></div></article>
+            </div>
+          </section>
+
+          <section class="panel" data-panel="risks">
+            <div class="kpi-grid">
+              <article class="kpi warn"><span>Em análise</span><strong id="riskAnalysis">-</strong><small>Requer acompanhamento</small></article>
+              <article class="kpi warn"><span>Sem valor informado</span><strong id="riskNoValue">-</strong><small>Planejamento incompleto</small></article>
+              <article class="kpi danger"><span>Rejeitadas/inativadas</span><strong id="riskRejected">-</strong><small>Perda de oportunidade</small></article>
+              <article class="kpi warn"><span>Prazo de captação</span><strong id="riskDeadline">-</strong><small>Vencendo em 60 dias</small></article>
+            </div>
+            <article class="surface">
+              <div class="surface-head"><h2>Lista de atenção</h2></div>
+              <div class="table-wrap"><table><thead><tr><th>Município</th><th>Recebedor</th><th>Situação</th><th>Prazo</th><th>Motivo</th></tr></thead><tbody id="riskRows"></tbody></table></div>
+            </article>
+          </section>
+
+          <section class="panel" data-panel="details">
+            <article class="surface">
+              <div class="surface-head"><h2>Base analítica</h2><span id="tableCount"></span></div>
+              <div class="table-wrap"><table><thead><tr><th>ID</th><th>Ano</th><th>Município</th><th>Recebedor</th><th>Objeto</th><th>Programa</th><th>Situação</th><th>Valor</th></tr></thead><tbody id="detailRows"></tbody></table></div>
+            </article>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="app.js?v=3"></script>
+  </body>
+</html>
