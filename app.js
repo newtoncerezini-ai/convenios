@@ -48,6 +48,7 @@ async function loadDashboard(force = false) {
     $("dashboard").hidden = false;
   } catch (error) {
     console.error(error);
+    $("apiErrorMessage").textContent = error.message || "Erro desconhecido ao consultar a API.";
     $("loadingState").hidden = true;
     $("errorState").hidden = false;
   }
@@ -74,7 +75,10 @@ async function apiGet(path, params = {}) {
     if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, value);
   });
   const response = await fetch(url);
-  if (!response.ok) throw new Error(`${response.status} em ${url.pathname}`);
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(`${response.status} em ${url.pathname}: ${body.slice(0, 240) || response.statusText}`);
+  }
   return fixEncoding(await response.json());
 }
 

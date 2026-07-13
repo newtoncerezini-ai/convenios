@@ -1,7 +1,7 @@
 const UPSTREAM = "https://api-publica.transferegov.gestao.gov.br";
 
-export default async function handler(request, response) {
-  const { path, ...params } = request.query;
+module.exports = async function handler(request, response) {
+  const { path, ...params } = request.query || {};
   const apiPath = Array.isArray(path) ? path[0] : path;
 
   if (!apiPath || (!apiPath.startsWith("/parcerias/") && apiPath !== "/parcerias")) {
@@ -29,4 +29,4 @@ export default async function handler(request, response) {
   } catch (error) {
     response.status(502).send(error instanceof Error ? error.message : "Erro ao consultar API.");
   }
-}
+};

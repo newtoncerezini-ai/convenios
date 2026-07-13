@@ -1,0 +1,11 @@
+{
+  "name": "convenios-pe-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "python server.py"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
